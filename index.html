@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoXploit</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+
+        :root {
+            --bg-main: #0a0a0b; --bg-card: #111113; --accent: #ffffff; 
+            --border: rgba(255, 255, 255, 0.08); --neon-green: #00FF41;
+        }
+
+        body { background-color: var(--bg-main); color: #e0e0e0; font-family: 'JetBrains Mono', monospace; margin: 0; min-height: 100vh; position: relative; }
+        #network-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+
+        .navbar { position: fixed; top: 0; left: 0; width: 100%; background: rgba(10, 10, 11, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 50; display: flex; justify-content: space-between; align-items: center; padding: 15px 50px; }
+        .nav-brand { font-weight: 700; font-size: 1.2rem; color: white; letter-spacing: 4px; cursor: pointer; }
+        .nav-links { display: flex; gap: 40px; }
+        .nav-link { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #666; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .nav-link:hover, .nav-link.active { color: var(--accent); text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .nav-link.active::after { content: ''; position: absolute; bottom: -20px; left: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        .page-content { padding: 120px 50px 80px 50px; max-width: 1400px; margin: 0 auto; }
+        .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-section { text-align: center; margin-bottom: 80px; margin-top: 40px; }
+        .hero-title { font-size: 3rem; font-weight: 700; color: white; letter-spacing: -2px; margin-bottom: 10px; }
+        .hero-subtitle { color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 40px; }
+        .search-container { position: relative; max-width: 700px; margin: 0 auto; }
+        .search-input { width: 100%; background: rgba(17, 17, 19, 0.7); border: 1px solid var(--border); padding: 20px 20px 20px 60px; border-radius: 8px; outline: none; color: white; font-size: 1.1rem; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .search-input:focus { border-color: rgba(255,255,255,0.4); box-shadow: 0 0 30px rgba(255,255,255,0.05); }
+        .search-icon { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: #666; font-size: 1.2rem; }
+
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
+        .game-card { background: rgba(17, 17, 19, 0.8); backdrop-filter: blur(5px); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; display: flex; flex-direction: column; position: relative;}
+        .game-card:hover { transform: translateY(-10px); border-color: rgba(255,255,255,0.2); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        .game-thumb { width: 100%; height: 160px; background: #1a1a1c; object-fit: cover; filter: grayscale(0.6); transition: filter 0.3s ease; }
+        .game-card:hover .game-thumb { filter: grayscale(0); }
+        .game-info { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .game-tag { font-size: 0.65rem; color: var(--neon-green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; }
+        .game-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 12px; text-transform: uppercase; color: white; line-height: 1.2; }
+        .script-status { font-size: 0.75rem; letter-spacing: 1px; display: flex; align-items: center; margin-top: auto; color: #888;}
+
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 25px; background: rgba(17, 17, 19, 0.8); backdrop-filter: blur(5px); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; }
+        .toggle-track { background-color: #333; transition: background-color 0.3s ease; }
+        .toggle-track.active { background-color: var(--accent); }
+        .toggle-dot { left: 4px; background-color: white; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.3s ease; }
+        .toggle-track.active .toggle-dot { transform: translateX(24px); background-color: black; }
+
+        footer { border-top: 1px solid var(--border); padding: 40px 50px; display: flex; justify-content: space-between; align-items: center; margin-top: 80px; background: rgba(10, 10, 11, 0.9); backdrop-filter: blur(10px); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--bg-card); border: 1px solid var(--border); width: 90%; max-width: 650px; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+        .modal-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .modal-body { padding: 25px; background: #050505; max-height: 400px; overflow-y: auto; }
+        .modal-body pre { color: var(--neon-green); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; word-wrap: break-word; white-space: pre-wrap;}
+        .modal-footer { padding: 25px; border-top: 1px solid var(--border); }
+        .btn-primary { background: transparent; color: white; padding: 15px; border: 1px solid white; border-radius: 4px; font-weight: 800; width: 100%; text-transform: uppercase; letter-spacing: 3px; transition: all 0.2s ease; cursor: pointer; }
+        .btn-primary:hover { background: white; color: black; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+
+    <canvas id="network-bg"></canvas>
+
+    <nav class="navbar">
+        <div class="nav-brand" data-target="view-home">SCRIPT.OS</div>
+        <div class="nav-links">
+            <div class="nav-link active hover-sfx click-sfx" data-target="view-home">Database</div>
+            <div class="nav-link hover-sfx click-sfx" data-target="view-layers">Categories</div>
+            <div class="nav-link hover-sfx click-sfx" data-target="view-code">Network Feed</div>
+        </div>
+        <div class="nav-link hover-sfx click-sfx" data-target="view-settings" title="Settings"><i class="fas fa-cog text-xl"></i></div>
+    </nav>
+
+    <div class="page-content">
+
+        <div id="view-home" class="view-section active">
+            <div class="hero-section">
+                <h1 class="hero-title">GLOBAL ASSET DATABASE</h1>
+                <p class="hero-subtitle">Bypass filters. Execute cleanly. Stay undetected.</p>
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="search-bar" class="search-input" placeholder="Search by game name or script title...">
+                </div>
+            </div>
+
+            <div class="flex justify-between items-end mb-8 border-b border-[rgba(255,255,255,0.05)] pb-4">
+                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-300">Available Scripts</h3>
+                <div class="flex items-center gap-4">
+                    <span id="results-counter" class="text-xs text-gray-600">Connecting to Database...</span>
+                    <button id="refresh-btn" class="hover-sfx click-sfx text-xs font-bold text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/10 px-3 py-1.5 rounded transition flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-sync-alt"></i> REFRESH
+                    </button>
+                </div>
+            </div>
+
+            <div id="script-grid" class="game-grid"></div>
+        </div>
+
+        <div id="view-layers" class="view-section">
+            <h2 class="text-3xl font-bold tracking-tighter text-white mb-8 border-b border-[rgba(255,255,255,0.05)] pb-4">GAME DIRECTORY</h2>
+            <div id="category-grid" class="game-grid"></div>
+        </div>
+
+        <div id="view-code" class="view-section">
+            <h2 class="text-3xl font-bold tracking-tighter text-white mb-8 border-b border-[rgba(255,255,255,0.05)] pb-4">GLOBAL NETWORK FEED</h2>
+            <div class="bg-[rgba(17,17,19,0.8)] backdrop-blur-md border border-[rgba(255,255,255,0.08)] p-8 rounded-lg font-mono text-sm leading-loose max-w-4xl shadow-2xl">
+                <p class="text-gray-500 mb-4">// LIVE_EXECUTION_LOGS</p>
+                <p><span class="text-[#00FF41]">[SYSTEM]</span> Connected to Google Sheets Database.</p>
+                <div class="flex items-center mt-6 text-gray-500">
+                    <div class="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse mr-2"></div>
+                    Waiting for secure network updates...
+                </div>
+            </div>
+        </div>
+
+        <div id="view-settings" class="view-section">
+            <h2 class="text-3xl font-bold tracking-tighter text-white mb-8 border-b border-[rgba(255,255,255,0.05)] pb-4">SYSTEM PREFERENCES</h2>
+            <div class="max-w-3xl">
+                <div class="setting-row hover-sfx">
+                    <div>
+                        <h4 class="font-bold text-white text-lg">Auto-Copy to Clipboard</h4>
+                        <p class="text-sm text-gray-500 mt-1">Skip the terminal popup and instantly copy raw scripts on click.</p>
+                    </div>
+                    <div id="auto-copy-toggle" class="toggle-track w-14 h-7 rounded-full relative cursor-pointer shadow-inner click-sfx">
+                        <div class="toggle-dot absolute top-1 w-5 h-5 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="script-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" class="font-bold tracking-widest text-white text-xl">SCRIPT</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white transition hover-sfx click-sfx"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+            <div class="modal-body">
+                <pre><code id="script-code">Loading secure payload...</code></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="copy-btn" class="btn-primary hover-sfx click-sfx">COPY SCRIPT TO CLIPBOARD</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // ==========================================
+            // YOUR GOOGLE SHEETS CSV LINK
+            // ==========================================
+            const baseUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQP_snIo80KoerxV6WGfidRMbgu-Y52bIOAEQ_cBxw5Js3seErQwdHm_Inf6ixg06UbyPFk7mDyIeuI/pub?output=csv"; 
+            
+            let scriptsDB = [];
+            const grid = document.getElementById('script-grid');
+            const categoryGrid = document.getElementById('category-grid');
+            const counter = document.getElementById('results-counter');
+            const searchBar = document.getElementById('search-bar');
+            const refreshBtn = document.getElementById('refresh-btn');
+
+            // --- AUDIO SYSTEM (Web Audio API) ---
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            function playTone(freq, type, duration, vol) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration);
+            }
+
+            // High tech blips
+            function hoverSound() { playTone(220, 'sine', 0.08, 0.03); }
+            function clickSound() { playTone(800, 'square', 0.05, 0.02); }
+
+            // Attach sounds to static elements
+            document.querySelectorAll('.hover-sfx').forEach(el => el.addEventListener('mouseenter', hoverSound));
+            document.querySelectorAll('.click-sfx').forEach(el => el.addEventListener('click', clickSound));
+
+            // --- Fetch Data ---
+            function fetchScripts() {
+                counter.innerText = "Fetching payload...";
+                const icon = refreshBtn.querySelector('i');
+                if(icon) icon.classList.add('fa-spin');
+
+                const cacheBusterUrl = baseUrl + "&t=" + new Date().getTime();
+
+                Papa.parse(cacheBusterUrl, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        scriptsDB = results.data;
+                        renderScripts(searchBar ? searchBar.value : "");
+                        renderCategories(); // NEW: Builds the category tab!
+                        if(icon) icon.classList.remove('fa-spin');
+                    },
+                    error: function(err) {
+                        counter.innerText = "Error connecting to database.";
+                        console.error("PapaParse Error:", err);
+                        if(icon) icon.classList.remove('fa-spin');
+                    }
+                });
+            }
+
+            if(refreshBtn) refreshBtn.addEventListener('click', fetchScripts);
+            fetchScripts();
+
+            // --- Render Database Grid ---
+            function renderScripts(filterText = "") {
+                grid.innerHTML = ""; 
+                let matchCount = 0;
+                
+                scriptsDB.forEach(item => {
+                    if (!item.gameName && !item.scriptName) return;
+
+                    const gName = item.gameName || "Unknown Game";
+                    const sName = item.scriptName || "Untitled Script";
+                    const searchableText = `${gName.toLowerCase()} ${sName.toLowerCase()}`;
+                    
+                    if (searchableText.includes(filterText.toLowerCase())) {
+                        matchCount++;
+                        
+                        const card = document.createElement('div');
+                        card.className = "game-card";
+                        
+                        const imgUrl = item.thumbnail || `https://via.placeholder.com/400x200/1a1a1a/00FF41?text=${gName.replace(/ /g, '+')}`;
+                        const statusTxt = item.status || "WORKING";
+
+                        card.innerHTML = `
+                            <img src="${imgUrl}" class="game-thumb">
+                            <div class="game-info">
+                                <div>
+                                    <div class="game-tag">${gName}</div>
+                                    <div class="game-title">${sName}</div>
+                                </div>
+                                <div class="script-status"><i class="fas fa-terminal mr-2"></i> ${statusTxt}</div>
+                            </div>
+                        `;
+                        
+                        // Attach dynamic sounds
+                        card.addEventListener('mouseenter', hoverSound);
+                        card.addEventListener('click', () => {
+                            clickSound();
+                            if (isAutoCopyEnabled) {
+                                navigator.clipboard.writeText(item.code || "-- No code provided");
+                                alert(`Successfully copied ${sName} to clipboard!`);
+                            } else {
+                                document.getElementById('modal-title').innerText = `>_ ${sName}.lua`;
+                                document.getElementById('script-code').innerText = item.code || "-- No code provided";
+                                document.getElementById('script-modal').classList.add('active');
+                            }
+                        });
+                        
+                        grid.appendChild(card);
+                    }
+                });
+                
+                counter.innerText = `Showing ${matchCount} results`;
+            }
+
+            // --- Render Categories Grid ---
+            function renderCategories() {
+                categoryGrid.innerHTML = "";
+                const uniqueGames = {}; // Will hold unique game names + their image
+                
+                scriptsDB.forEach(item => {
+                    if (item.gameName && !uniqueGames[item.gameName]) {
+                        uniqueGames[item.gameName] = item.thumbnail || `https://via.placeholder.com/400x200/1a1a1a/00FF41?text=${item.gameName.replace(/ /g, '+')}`;
+                    }
+                });
+
+                Object.keys(uniqueGames).forEach(game => {
+                    const card = document.createElement('div');
+                    card.className = "game-card p-0 flex flex-col items-center justify-center text-center h-48 relative overflow-hidden";
+                    
+                    // We use the image as a dark background for the category tile
+                    card.innerHTML = `
+                        <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('${uniqueGames[game]}'); filter: grayscale(100%); transition: all 0.3s ease;"></div>
+                        <div class="relative z-10 flex flex-col items-center">
+                            <i class="fas fa-folder-open text-3xl mb-3 text-white"></i>
+                            <div class="game-title mb-0">${game}</div>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('mouseenter', () => {
+                        hoverSound();
+                        card.querySelector('.opacity-20').style.opacity = '0.4';
+                        card.querySelector('.opacity-20').style.filter = 'grayscale(0%)';
+                    });
+                    
+                    card.addEventListener('mouseleave', () => {
+                        card.querySelector('.opacity-20').style.opacity = '0.2';
+                        card.querySelector('.opacity-20').style.filter = 'grayscale(100%)';
+                    });
+
+                    card.addEventListener('click', () => {
+                        clickSound();
+                        
+                        // Switch back to the home view automatically
+                        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        document.querySelector('[data-target="view-home"].nav-link').classList.add('active');
+                        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                        document.getElementById('view-home').classList.add('active');
+                        
+                        // Set the search bar to the game name and filter!
+                        searchBar.value = game;
+                        renderScripts(game);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    
+                    categoryGrid.appendChild(card);
+                });
+            }
+
+            if (searchBar) searchBar.addEventListener('input', (e) => renderScripts(e.target.value));
+
+            // --- Canvas Background Network Effect ---
+            const canvas = document.getElementById("network-bg");
+            const ctx = canvas.getContext("2d");
+            let width, height;
+            let particles = [];
+            let mouse = { x: null, y: null };
+            document.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            document.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+            function resizeCanvas() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5; this.radius = Math.random() * 1.5 + 0.5; }
+                update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; }
+                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.fill(); }
+            }
+            for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+            function animateCanvas() {
+                ctx.clearRect(0, 0, width, height);
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update(); particles[i].draw();
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y; const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 - dist/1200})`; ctx.lineWidth = 0.5; ctx.stroke(); }
+                    }
+                    if (mouse.x != null && mouse.y != null) {
+                        const mdx = particles[i].x - mouse.x; const mdy = particles[i].y - mouse.y; const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+                        if (mdist < 150) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.strokeStyle = `rgba(0, 255, 65, ${0.15 - mdist/1000})`; ctx.lineWidth = 0.5; ctx.stroke(); }
+                    }
+                }
+                requestAnimationFrame(animateCanvas);
+            }
+            animateCanvas();
+
+            // --- Navigation Logic ---
+            const links = document.querySelectorAll('.nav-link, .nav-brand');
+            const sections = document.querySelectorAll('.view-section');
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    if(link.classList.contains('nav-brand')) {
+                        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        document.querySelector('[data-target="view-home"].nav-link').classList.add('active');
+                    } else {
+                        document.querySelectorAll('.nav-link').forEach(i => i.classList.remove('active'));
+                        link.classList.add('active');
+                    }
+                    sections.forEach(sec => sec.classList.remove('active'));
+                    const targetId = link.getAttribute('data-target');
+                    if (document.getElementById(targetId)) {
+                        document.getElementById(targetId).classList.add('active');
+                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Clear search if navigating to home from navbar
+                    if(targetId === 'view-home' && searchBar) {
+                        searchBar.value = "";
+                        renderScripts();
+                    }
+                });
+            });
+
+            // --- Settings Toggle ---
+            const autoCopyToggle = document.getElementById('auto-copy-toggle');
+            let isAutoCopyEnabled = false;
+            if (autoCopyToggle) {
+                autoCopyToggle.addEventListener('click', () => {
+                    isAutoCopyEnabled = !isAutoCopyEnabled;
+                    autoCopyToggle.classList.toggle('active');
+                });
+            }
+
+            // --- Script Modal Actions ---
+            const modal = document.getElementById('script-modal');
+            const copyBtn = document.getElementById('copy-btn');
+            const scriptCode = document.getElementById('script-code');
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(scriptCode.innerText);
+                copyBtn.innerText = "COPIED!";
+                copyBtn.style.background = "white"; copyBtn.style.color = "black";
+                setTimeout(() => {
+                    copyBtn.innerText = "COPY SCRIPT TO CLIPBOARD";
+                    copyBtn.style.background = "transparent"; copyBtn.style.color = "white";
+                }, 2000);
+            });
+            
+            // Allow clicking into search bar without triggering sound
+            searchBar.addEventListener('click', (e) => e.stopPropagation());
+        });
+    </script>
+</body>
+</html>
