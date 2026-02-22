@@ -23,8 +23,8 @@
         .nav-link.active::after { content: ''; position: absolute; bottom: -20px; left: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
         
         .page-content { padding: 140px 50px 40px 50px; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 100px); }
-        .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
-        .view-section.active { display: block; }
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
         .hero-section { text-align: center; margin-bottom: 80px; }
@@ -53,9 +53,10 @@
         .game-tag { font-size: 0.65rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
         .game-title { font-weight: 700; font-size: 1.1rem; color: white; text-transform: uppercase; }
         
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        /* Modal Fixes */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #0d0d0f; border: 1px solid var(--border); width: 90%; max-width: 700px; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .modal-content { background: #0d0d0f; border: 1px solid var(--border); width: 90%; max-width: 700px; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); z-index: 2100; pointer-events: all; }
         .modal-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
         .modal-body { padding: 25px; background: #050505; max-height: 400px; overflow-y: auto; }
         .modal-body pre { color: var(--neon-green); font-size: 0.85rem; white-space: pre-wrap; word-break: break-all; }
@@ -65,7 +66,7 @@
         .setting-container { display: flex; justify-content: space-between; align-items: center; background: rgba(17, 17, 19, 0.8); border: 1px solid var(--border); padding: 25px; border-radius: 4px; }
         .toggle-track { width: 48px; height: 24px; background-color: #333; border-radius: 100px; position: relative; cursor: pointer; transition: background 0.3s; }
         .toggle-track.active { background-color: var(--neon-green); }
-        .toggle-dot { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform 0.3s; }
+        .toggle-dot { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform 0.3s; pointer-events: none;}
         .toggle-track.active .toggle-dot { transform: translateX(24px); }
 
         footer { padding: 40px 50px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: #444; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; }
@@ -79,20 +80,20 @@
     <canvas id="network-bg"></canvas>
 
     <nav class="navbar">
-        <div id="ui-nav-brand" class="nav-brand click-sfx" data-target="view-home">ROXPLOIT</div>
+        <div class="nav-brand click-sfx" data-target="view-home">ROXPLOIT</div>
         <div class="nav-links">
             <div class="nav-link active hover-sfx click-sfx" data-target="view-home">Database</div>
             <div class="nav-link hover-sfx click-sfx" data-target="view-layers">Directory</div>
             <div class="nav-link hover-sfx click-sfx" data-target="view-code">Network</div>
         </div>
-        <div class="nav-link hover-sfx click-sfx" data-target="view-settings"><i class="fas fa-cog text-xl"></i></div>
+        <div class="nav-link hover-sfx click-sfx" data-target="view-settings"><i class="fas fa-cog text-xl pointer-events-none"></i></div>
     </nav>
 
     <div class="page-content">
         <div id="view-home" class="view-section active">
             <div class="hero-section">
-                <h1 id="ui-hero-title" class="hero-title">RoXploit Hub</h1>
-                <p id="ui-hero-tagline" class="hero-subtitle">Better than the Best.</p>
+                <h1 class="hero-title">RoXploit Hub</h1>
+                <p class="hero-subtitle">Better than the Best.</p>
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" id="search-bar" class="search-input" placeholder="Search for scripts.">
@@ -100,11 +101,11 @@
             </div>
 
             <div class="flex justify-between items-center mb-8 border-b border-[rgba(255,255,255,0.05)] pb-4">
-                <div id="ui-status-pill" class="status-pill"><div class="pulse-dot"></div> Network: Online</div>
+                <div class="status-pill"><div class="pulse-dot"></div> Network: Online</div>
                 <div class="flex items-center gap-6">
-                    <span id="results-counter" class="text-[10px] text-gray-600 uppercase tracking-widest">Loading...</span>
+                    <span id="results-counter" class="text-[10px] text-gray-600 uppercase tracking-widest">Connecting...</span>
                     <button id="refresh-btn" class="hover-sfx click-sfx text-[10px] font-bold text-[#00FF41] border border-[#00FF41]/20 px-4 py-2 hover:bg-[#00FF41]/5 transition flex items-center gap-2">
-                        <i class="fas fa-sync-alt"></i> REFRESH HUB
+                        <i class="fas fa-sync-alt pointer-events-none"></i> REFRESH HUB
                     </button>
                 </div>
             </div>
@@ -149,7 +150,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-title" class="font-bold tracking-widest text-white text-sm uppercase">PAYLOAD</h3>
-                <button id="close-modal" class="text-gray-500 hover:text-white transition hover-sfx click-sfx"><i class="fas fa-times"></i></button>
+                <button id="close-modal" class="text-gray-500 hover:text-white transition hover-sfx click-sfx"><i class="fas fa-times text-2xl"></i></button>
             </div>
             <div class="modal-body"><pre><code id="script-code">...</code></pre></div>
             <div class="modal-footer"><button id="copy-btn" class="btn-primary hover-sfx click-sfx">COPY DATA</button></div>
@@ -168,14 +169,15 @@
             let scriptsDB = [];
             let isAutoCopyEnabled = false;
             let mouse = { x: null, y: null };
-
+            
             const grid = document.getElementById('script-grid');
             const catGrid = document.getElementById('category-grid');
             const counter = document.getElementById('results-counter');
             const searchBar = document.getElementById('search-bar');
             const refreshBtn = document.getElementById('refresh-btn');
-            
-            // SFX Logic
+            const modal = document.getElementById('script-modal');
+
+            // --- SFX SYSTEM ---
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             function sfx(f, t, d, v) {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -188,27 +190,59 @@
             const hoverSound = () => sfx(300, 'sine', 0.1, 0.02);
             const clickSound = () => sfx(1200, 'square', 0.05, 0.01);
 
-            function attachSfx() {
-                document.querySelectorAll('.hover-sfx').forEach(el => el.onmouseenter = hoverSound);
-                document.querySelectorAll('.click-sfx').forEach(el => el.onclick = clickSound);
+            // --- MODAL CONTROLS ---
+            function closeModal() {
+                modal.classList.remove('active');
             }
 
-            // Clipboard Logic
-            function copyToClipboard(text) {
-                if (navigator.clipboard && window.isSecureContext) {
-                    return navigator.clipboard.writeText(text);
-                } else {
-                    let textArea = document.createElement("textarea");
-                    textArea.value = text;
-                    textArea.style.position = "fixed"; textArea.style.left = "-9999px";
-                    document.body.appendChild(textArea);
-                    textArea.focus(); textArea.select();
-                    document.execCommand('copy');
-                    textArea.remove();
-                    return Promise.resolve();
+            document.getElementById('close-modal').addEventListener('click', (e) => {
+                e.stopPropagation();
+                clickSound();
+                closeModal();
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    clickSound();
+                    closeModal();
                 }
-            }
+            });
 
+            // --- NAVIGATION ---
+            const links = document.querySelectorAll('.nav-link, .nav-brand');
+            links.forEach(l => {
+                l.addEventListener('click', () => {
+                    const target = l.getAttribute('data-target');
+                    if (!target) return;
+                    
+                    clickSound();
+                    
+                    // Update Links
+                    document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+                    if (l.classList.contains('nav-link')) l.classList.add('active');
+                    else document.querySelector('.nav-link[data-target="view-home"]').classList.add('active');
+
+                    // Update Sections
+                    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                    document.getElementById(target).classList.add('active');
+                    
+                    if(target === 'view-home') {
+                        searchBar.value = "";
+                        render();
+                    }
+                    window.scrollTo(0, 0);
+                });
+            });
+
+            // --- SETTINGS TOGGLE ---
+            const toggle = document.getElementById('auto-copy-toggle');
+            toggle.addEventListener('click', () => {
+                isAutoCopyEnabled = !isAutoCopyEnabled;
+                toggle.classList.toggle('active');
+                clickSound();
+            });
+
+            // --- DATA FETCHING ---
             function fetchScripts() {
                 const icon = refreshBtn.querySelector('i');
                 if(icon) icon.classList.add('fa-spin');
@@ -217,11 +251,11 @@
                     complete: r => {
                         scriptsDB = r.data; render(); renderCats();
                         if(icon) icon.classList.remove('fa-spin');
-                        attachSfx();
                     }
                 });
             }
-            refreshBtn.onclick = fetchScripts; fetchScripts();
+            refreshBtn.onclick = fetchScripts; 
+            fetchScripts();
 
             function render(q = "") {
                 grid.innerHTML = ""; let count = 0;
@@ -239,7 +273,7 @@
                         c.onclick = () => {
                             clickSound();
                             if (isAutoCopyEnabled) {
-                                copyToClipboard(i.code).then(() => {
+                                navigator.clipboard.writeText(i.code).then(() => {
                                    let oldTitle = c.querySelector('.game-title').innerText;
                                    c.querySelector('.game-title').innerText = "COPIED!";
                                    setTimeout(() => c.querySelector('.game-title').innerText = oldTitle, 1000);
@@ -247,7 +281,7 @@
                             } else {
                                 document.getElementById('modal-title').innerText = i.scriptName;
                                 document.getElementById('script-code').innerText = i.code;
-                                document.getElementById('script-modal').classList.add('active');
+                                modal.classList.add('active');
                             }
                         };
                         grid.appendChild(c);
@@ -267,13 +301,13 @@
                     const c = document.createElement('div'); 
                     c.className = "game-card p-10 flex flex-col items-center justify-center text-center h-48";
                     const bgImg = gamesData[g] ? `<div class="cat-bg-img" style="background-image: url('${gamesData[g]}')"></div>` : "";
-                    c.innerHTML = `${bgImg}<div class="relative z-10 flex flex-col items-center"><i class="fas fa-folder-open text-4xl mb-4 category-icon-box"></i><div class="game-title text-sm">${g}</div></div>`;
+                    c.innerHTML = `${bgImg}<div class="relative z-10 flex flex-col items-center"><i class="fas fa-folder-open text-4xl mb-4 text-[#00FF41]/30"></i><div class="game-title text-sm">${g}</div></div>`;
                     
                     c.onmouseenter = hoverSound;
                     c.onclick = () => {
                         clickSound(); 
                         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                        document.querySelector('[data-target="view-home"]').classList.add('active');
+                        document.querySelector('.nav-link[data-target="view-home"]').classList.add('active');
                         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
                         document.getElementById('view-home').classList.add('active');
                         searchBar.value = g; render(g); window.scrollTo(0,0);
@@ -284,7 +318,7 @@
 
             searchBar.oninput = e => render(e.target.value);
             
-            // --- FIXED NETWORK PARTICLES (GRAY COLOR + MOUSE INTERACTION) ---
+            // --- NETWORK BACKGROUND ---
             const canvas = document.getElementById("network-bg"); const ctx = canvas.getContext("2d");
             let w, h, p = [];
             function res() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
@@ -299,12 +333,8 @@
                     p[i].x += p[i].vx; p[i].y += p[i].vy;
                     if(p[i].x < 0 || p[i].x > w) p[i].vx *= -1;
                     if(p[i].y < 0 || p[i].y > h) p[i].vy *= -1;
-
-                    // Particle dots
                     ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
                     ctx.beginPath(); ctx.arc(p[i].x, p[i].y, 1, 0, Math.PI * 2); ctx.fill();
-
-                    // Connect to mouse
                     if (mouse.x && mouse.y) {
                         let mdx = p[i].x - mouse.x; let mdy = p[i].y - mouse.y; let mdist = Math.sqrt(mdx * mdx + mdy * mdy);
                         if (mdist < 150) {
@@ -312,8 +342,6 @@
                             ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p[i].x, p[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
                         }
                     }
-
-                    // Connect to other dots
                     for (let j = i + 1; j < p.length; j++) {
                         let dx = p[i].x - p[j].x; let dy = p[i].y - p[j].y; let dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < 130) {
@@ -326,24 +354,10 @@
             }
             draw();
 
-            const links = document.querySelectorAll('.nav-link, .nav-brand');
-            links.forEach(l => l.onclick = () => {
-                links.forEach(i => i.classList.remove('active')); l.classList.add('active');
-                document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-                document.getElementById(l.dataset.target).classList.add('active');
-            });
-
-            const toggle = document.getElementById('auto-copy-toggle');
-            toggle.onclick = () => {
-                isAutoCopyEnabled = !isAutoCopyEnabled;
-                toggle.classList.toggle('active');
-                clickSound();
-            };
-
-            document.getElementById('close-modal').onclick = () => document.getElementById('script-modal').classList.remove('active');
+            // --- COPY BUTTON ---
             document.getElementById('copy-btn').onclick = function() {
                 const code = document.getElementById('script-code').innerText;
-                copyToClipboard(code).then(() => {
+                navigator.clipboard.writeText(code).then(() => {
                     this.innerText = "COPIED";
                     setTimeout(() => this.innerText = "COPY DATA", 1000);
                 });
